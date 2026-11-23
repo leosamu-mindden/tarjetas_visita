@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101b2b">
+  <meta name="description" content="Tarjeta de visita digital">
+  <title>Tarjeta de visita digital</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1220;--panel:#142238;--ink:#f7f9fc;--muted:#bbcadc;--accent:#77d4d2;--line:#33445d}
+    *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(circle at top,#24415b 0%,var(--bg) 65%);color:var(--ink);min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+    main{width:min(100%,440px);background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:30px 24px;box-shadow:0 20px 60px #0005}
+    .avatar{display:grid;place-items:center;width:84px;height:84px;border-radius:22px;background:linear-gradient(135deg,#2a9d9a,#3460b0);font-size:32px;font-weight:750;margin-bottom:20px}
+    .eyebrow{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:2px;font-weight:700}h1{font-size:29px;line-height:1.14;margin:9px 0}h2{font-size:16px;color:var(--muted);font-weight:500;margin:8px 0 15px}.about{font-size:15px;line-height:1.6;color:var(--muted);margin:0 0 22px}
+    a.button{display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:12px;text-decoration:none;font-weight:700;margin-top:11px;border:1px solid var(--line);color:var(--ink)}a.primary{background:var(--accent);color:#08202b;border-color:var(--accent)}a.button:focus-visible{outline:3px solid white;outline-offset:3px}
+    .links{margin-top:20px;border-top:1px solid var(--line);padding-top:9px}.links a{display:block;color:var(--muted);padding:8px 0;text-decoration:none;overflow-wrap:anywhere}.links a:hover{text-decoration:underline}footer{font-size:12px;color:var(--muted);margin-top:24px;text-align:center}
+  </style>
+</head>
+<body>
+<main>
+  <div class="avatar" id="avatar" aria-hidden="true">TV</div>
+  <div class="eyebrow">Contacto profesional</div>
+  <h1 id="name"></h1>
+  <h2 id="role"></h2>
+  <p class="about" id="bio"></p>
+  <a class="button primary" id="save" href="#">Guardar contacto</a>
+  <a class="button" id="email" href="#">Enviar correo</a>
+  <div class="links" id="links"></div>
+  <footer>Tarjeta de visita digital · NFC y QR</footer>
+</main>
+<script>
+/* EDITA SOLO ESTE BLOQUE CON TUS DATOS */
+const contacto = {
+  nombre: "Tu nombre y apellidos",
+  cargo: "Tu cargo profesional",
+  empresa: "Tu empresa",
+  descripcion: "Una breve presentación sobre tu experiencia y cómo puedes ayudar.",
+  telefono: "+34 600 000 000",
+  email: "tu.correo@ejemplo.com",
+  web: "https://ejemplo.com",
+  linkedin: "https://www.linkedin.com/in/tu-perfil/"
+};
+/* FIN DE DATOS EDITABLES */
+const $ = id => document.getElementById(id);
+$('name').textContent = contacto.nombre;
+$('role').textContent = [contacto.cargo, contacto.empresa].filter(Boolean).join(' · ');
+$('bio').textContent = contacto.descripcion;
+$('avatar').textContent = contacto.nombre.trim().split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
+$('email').href='mailto:'+contacto.email;
+const validHttp = value => {try {const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u.href:null}catch{return null}};
+const links=[['Llamar','tel:'+contacto.telefono.replace(/[^+\d]/g,'')],['LinkedIn',validHttp(contacto.linkedin)],['Sitio web',validHttp(contacto.web)]];
+for(const [label,href] of links){if(!href)continue;const a=document.createElement('a');a.textContent=label;a.href=href;if(href.startsWith('http')){a.target='_blank';a.rel='noopener noreferrer'}$('links').appendChild(a)}
+const esc=v=>String(v||'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,');
+const vcard=[
+ 'BEGIN:VCARD','VERSION:3.0',
+ 'FN:'+esc(contacto.nombre),
+ 'ORG:'+esc(contacto.empresa),
+ 'TITLE:'+esc(contacto.cargo),
+ 'TEL;TYPE=CELL:'+esc(contacto.telefono),
+ 'EMAIL;TYPE=INTERNET:'+esc(contacto.email),
+ ...(validHttp(contacto.web)?['URL:'+esc(contacto.web)]:[]),
+ ...(validHttp(contacto.linkedin)?['URL:'+esc(contacto.linkedin)]:[]),
+ 'END:VCARD'
+].join('\r\n')+'\r\n';
+const blob=new Blob([vcard],{type:'text/vcard;charset=utf-8'});
+const objectUrl=URL.createObjectURL(blob);
+$('save').href=objectUrl;
+$('save').download='contacto.vcf';
+</script>
+</body>
+</html>
